@@ -100,9 +100,40 @@ def export_to_powerpoint(kpis, df):
     prs.save(ppt_path)
     return ppt_path
 
+REQUIRED_COLUMNS = {
+    "sold items after return", "return rate", "cg2", "cg3",
+    "supplier article name", "image link"
+}
+
 if uploaded_files and len(uploaded_files) == 3:
     labels = ["Current Week", "Last Week", "Same Week Last Year"]
-    dataframes = [standardize_columns(pd.read_excel(file)) for file in uploaded_files]
+
+    # Parse each file exactly once and cache the result in session_state,
+    # keyed by filename+size. This avoids re-reading the upload stream on
+    # every script rerun (Streamlit reruns the whole script on each button
+    # click), which is what was causing the KeyError on "cg2" -- a re-read
+    # of an already-consumed upload stream can come back empty/malformed.
+    dataframes = []
+    parse_error = False
+    for file in uploaded_files:
+        cache_key = f"parsed::{file.name}::{file.size}"
+        if cache_key not in st.session_state:
+            file.seek(0)
+            df = standardize_columns(pd.read_excel(file))
+            missing = REQUIRED_COLUMNS - set(df.columns)
+            if missing:
+                st.error(
+                    f"**{file.name}** is missing required column(s): "
+                    f"{', '.join(sorted(missing))}.\n\n"
+                    f"Columns found: {', '.join(df.columns)}"
+                )
+                parse_error = True
+                continue
+            st.session_state[cache_key] = df
+        dataframes.append(st.session_state[cache_key])
+
+    if parse_error:
+        st.stop()
 
     for label, df in zip(labels, dataframes):
         st.subheader(f"{label} Summary")
