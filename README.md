@@ -8,7 +8,9 @@ Sellers" slide with product images pulled from URLs.
 ## What it demonstrates
 - Data pipelines with **pandas** (column normalization, groupby aggregation, WoW/YoY deltas)
 - Turning a manual reporting task into a **self-serve tool** (upload → click → download)
-- Programmatic **PowerPoint generation** with `python-pptx`, including dynamic image placement
+- Programmatic **PowerPoint generation** with `python-pptx` — a designed report (color palette,
+  stat cards, dynamic image placement) rather than plain bullet points
+- Input validation with clear, actionable error messages instead of raw stack traces
 - A working, deployable **Streamlit** front end
 
 ## Run it locally
@@ -39,12 +41,12 @@ Each Excel file needs these columns (case-insensitive):
 | Image Link | URL to a product image |
 
 ## Known limitations (be upfront about these if asked in an interview)
-- Column names are hardcoded — a real production version would validate
-  uploads and show a clear error if a required column is missing, rather
-  than throwing a KeyError.
-- Image downloads fail silently to a text placeholder (by design, so one
-  broken link doesn't crash the whole report) — but there's no logging of
-  *which* images failed.
+- Column names are still hardcoded to one naming convention — uploads are
+  validated with a clear error message if a required column is missing,
+  but the app doesn't yet support alternate column-name mappings.
+- If a product image fails to load, the report falls back to a styled
+  placeholder card (by design, so one broken link doesn't crash the whole
+  report) — but there's no logging of *which* images failed.
 - No automated tests yet.
 
 ---
