@@ -15,6 +15,9 @@ real company data needed (see below for details).
 - Turning a manual reporting task into a **self-serve tool** (upload → click → download)
 - Programmatic **PowerPoint generation** with `python-pptx` — a designed report (color palette,
   stat cards, dynamic image placement) rather than plain bullet points
+- Threshold-based KPI status badges (on target / watch / off target) so the report reads as
+  an assessment, not just a data dump — thresholds are configurable constants at the top of
+  the script (`RETURN_RATE_TARGET`, `SALES_GROWTH_STRONG`, etc.)
 - Input validation with clear, actionable error messages instead of raw stack traces
 - A working, deployable **Streamlit** front end
 
