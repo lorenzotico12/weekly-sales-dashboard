@@ -65,9 +65,60 @@ WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 GRAY = RGBColor(0x6E, 0x6E, 0x6E)
 GREEN = RGBColor(0x2E, 0x7D, 0x32)
 RED = RGBColor(0xC6, 0x28, 0x28)
+AMBER = RGBColor(0xB0, 0x77, 0x00)
 
 FONT_HEADER = "Cambria"
 FONT_BODY = "Calibri"
+
+# ---------------------------------------------------------------------------
+# KPI targets — adjust these to match real business goals.
+# ---------------------------------------------------------------------------
+RETURN_RATE_TARGET = 6.0   # return rate at/below this = "on target"
+RETURN_RATE_WATCH = 9.0    # above target but at/below this = "watch"; above = "off target"
+SALES_GROWTH_STRONG = 5.0  # WoW sales growth at/above this = "strong growth"
+SALES_GROWTH_DECLINE = -5.0  # WoW sales growth at/below this = "declining"
+
+
+def _sales_badge(wow):
+    if wow >= SALES_GROWTH_STRONG:
+        return "STRONG GROWTH", GREEN
+    if wow <= SALES_GROWTH_DECLINE:
+        return "DECLINING", RED
+    return "STABLE", AMBER
+
+
+def _return_badge(rate):
+    if rate <= RETURN_RATE_TARGET:
+        return "ON TARGET", GREEN
+    if rate <= RETURN_RATE_WATCH:
+        return "WATCH", AMBER
+    return "OFF TARGET", RED
+
+
+def _badge(slide, left, top, width, height, text, color):
+    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height)
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = color
+    shape.line.fill.background()
+    shape.shadow.inherit = False
+    try:
+        shape.adjustments[0] = 0.5
+    except Exception:
+        pass
+    tf = shape.text_frame
+    tf.margin_left = 0
+    tf.margin_right = 0
+    tf.margin_top = 0
+    tf.margin_bottom = 0
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    run = p.add_run()
+    run.text = text
+    run.font.size = Pt(11)
+    run.font.bold = True
+    run.font.color.rgb = WHITE
+    run.font.name = FONT_BODY
+    return shape
 
 
 def _delta_color(value):
@@ -145,8 +196,11 @@ def build_kpi_slide(prs, kpis):
 
     # Sales card
     _card(slide, left1, top1, card_w, card_h)
-    _textbox(slide, left1 + pad, top1 + Inches(0.25), card_w - 2 * pad, Inches(0.35),
+    _textbox(slide, left1 + pad, top1 + Inches(0.25), Inches(3.0), Inches(0.35),
              "SALES (UNITS)", 14, NAVY, bold=True)
+    sales_text, sales_color = _sales_badge(kpis['sales_wow'])
+    _badge(slide, left1 + card_w - pad - Inches(1.9), top1 + Inches(0.2), Inches(1.9), Inches(0.36),
+           sales_text, sales_color)
     _textbox(slide, left1 + pad, top1 + Inches(0.6), card_w - 2 * pad, Inches(1.0),
              f"{kpis['sales']:,}", 54, NAVY, bold=True, font=FONT_HEADER)
     _multirun_textbox(slide, left1 + pad, top1 + Inches(1.65), card_w - 2 * pad, Inches(0.5), [
@@ -158,8 +212,11 @@ def build_kpi_slide(prs, kpis):
 
     # Return rate card
     _card(slide, left2, top1, card_w, card_h)
-    _textbox(slide, left2 + pad, top1 + Inches(0.25), card_w - 2 * pad, Inches(0.35),
+    _textbox(slide, left2 + pad, top1 + Inches(0.25), Inches(3.0), Inches(0.35),
              "RETURN RATE", 14, NAVY, bold=True)
+    return_text, return_color = _return_badge(kpis['return_rate'])
+    _badge(slide, left2 + card_w - pad - Inches(1.9), top1 + Inches(0.2), Inches(1.9), Inches(0.36),
+           return_text, return_color)
     _textbox(slide, left2 + pad, top1 + Inches(0.6), card_w - 2 * pad, Inches(1.0),
              f"{kpis['return_rate']:.1f}%", 54, NAVY, bold=True, font=FONT_HEADER)
     _multirun_textbox(slide, left2 + pad, top1 + Inches(1.65), card_w - 2 * pad, Inches(0.5), [
